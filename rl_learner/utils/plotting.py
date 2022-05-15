@@ -1,3 +1,4 @@
+import argparse
 import os
 
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ import seaborn as sns
 
 def get_datasets(logdir):
     """
-    Recursively look through logdir for output files produced by EpochLogger. 
+    Recursively look through logdir for output files produced by EpochLogger.
 
     Assumes that any file "progress.txt" is a valid hit.
 
@@ -44,7 +45,7 @@ def plot_data(data, target="AverageEpRet", smooth=1, hue='Exp', **kwargs):
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
 
-    # Plotting    
+    # Plotting
     sns.set(style='darkgrid', font_scale=1.5)
     sns.lineplot(data=data, x='Epoch', y=target, hue=hue, **kwargs)
     plt.legend(loc='best').set_draggable(True)
@@ -53,3 +54,32 @@ def plot_data(data, target="AverageEpRet", smooth=1, hue='Exp', **kwargs):
     if xscale:
         plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 1))
     plt.tight_layout(pad=0.5)
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--logdir', type=str)
+    parser.add_argument('--savedir', type=str, default=None)
+    parser.add_argument('--y', type=str, default='AverageEpRet')
+    parser.add_argument('--smooth', type=int, default=1)
+    parser.add_argument('--fig_width', type=float, default=8)
+    parser.add_argument('--fig_height', type=float, default=5)
+
+    args = parser.parse_args()
+
+    return args
+
+
+def main():
+    args = get_arguments()
+    datasets = get_datasets(args.logdir)
+    plt.figure(figsize=(args.fig_width, args.fig_height))
+    plot_data(datasets, target=args.y, smooth=args.smooth)
+    if args.savedir is not None:
+        plt.savefig(args.savedir, dpi=300)
+    else:
+        plt.show()
+
+
+if __name__ == '__main__':
+    main()

@@ -20,7 +20,7 @@ class EpochLogger:
             exp_name (string): The name of a set of experiments. The name of an agent is recommended.
             run_id (string): The name of an experiment. If ``None``, defaults to a random number.
         """
-        # Set the directory 
+        # Set the directory
         self.output_dir = output_dir or './results'  # {output_dir}
         self.output_dir = os.path.join(self.output_dir, exp_name) or self.output_dir  # {output_dir}/{exp_name}
         self.run_id = str(run_id) or str(int(time.time()))
@@ -36,11 +36,14 @@ class EpochLogger:
 
     def log(self, **kwargs):
         """Log diagnostics"""
+        msg = ""
         for k, v in kwargs.items():
             if not(k in self.epoch_dict.keys()):
                 self.epoch_dict[k] = []
             self.epoch_dict[k].append(v)
             self.writer.add_scalar(k, v, len(self.epoch_dict[k]))
+            msg += f"{k}: {v:<6} | "
+        print(msg)
 
     def dump(self):
         """
