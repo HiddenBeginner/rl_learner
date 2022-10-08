@@ -22,3 +22,26 @@ class MLPDiscretePolicy(nn.Module):
         x = F.softmax(self.fc2(x), dim=-1)
 
         return x
+
+
+class MLPContinuousPolicy(nn.Module):
+    def __init__(self, input_dim, output_dim, hidden_dim=512):
+        super(MLPContinuousPolicy, self).__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.mu = nn.Linear(hidden_dim, output_dim)
+        self.log_std = nn.Linear(hidden_dim, output_dim)
+
+    def _format(self, x):
+        if isinstance(x, np.ndarray):
+            x = torch.from_numpy(x).float()
+
+        return x
+
+    def forward(self, x):
+        x = self._format(x)
+        x = F.relu(self.fc1(x))
+
+        mu = self.mu(x)
+        log_std = torch.tanh(self.log_std(x))
+
+        return mu, log_std.exp()
