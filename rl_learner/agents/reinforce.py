@@ -23,10 +23,9 @@ class REINFORCE:
 
         ret = np.copy(r)
         for t in reversed(range(len(r) - 1)):
-            ret[t] += self.gamma * ret[t+1]
+            ret[t] += self.gamma * ret[t + 1]
 
-        s, a, ret = map(lambda x: torch.as_tensor(x), [s, a, ret])
-        a = a.unsqueeze(1)
+        s, a, ret = map(lambda x: torch.as_tensor(x).float(), [s, a, ret])
         ret = ret.unsqueeze(1)
 
         probs = self.policy(s)

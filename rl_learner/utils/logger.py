@@ -5,7 +5,7 @@ import time
 from torch.utils.tensorboard import SummaryWriter
 
 
-class EpochLogger:
+class Logger:
     """
     Minimal version of spinningup's EpochLogger.
 
@@ -13,18 +13,19 @@ class EpochLogger:
         https://github.com/openai/spinningup/blob/master/spinup/utils/logx.py
         https://github.com/kakaoenterprise/JORLDY/blob/master/jorldy/manager/log_manager.py
     """
-    def __init__(self, output_dir=None, exp_name=None, run_id=None):
+    def __init__(self, output_dir=None, env_name='', agent_name='', run_id=None, verbose=True):
         """
         Args:
-            output_dir (string): A directory for saving results to. If ``None``, defaults to ``./results``
-            exp_name (string): The name of a set of experiments. The name of an agent is recommended.
+            output_dir (string): The directory where results are stored
+            env_name (string): The name of an environment. 
+            agent_name (string): The name of an agent. The name of an agent is recommended.
             run_id (string): The name of an experiment. If ``None``, defaults to a random number.
         """
         # Set the directory
-        self.output_dir = output_dir or './results'  # {output_dir}
-        self.output_dir = os.path.join(self.output_dir, exp_name) or self.output_dir  # {output_dir}/{exp_name}
-        self.run_id = str(run_id) or str(int(time.time()))
-        self.output_dir = os.path.join(self.output_dir, self.run_id)  # {output_dir}/{exp_name}/{run_id}
+        output_dir = output_dir or './results'
+        self.verbose = verbose
+        run_id = str(run_id) or str(int(time.time()))
+        self.output_dir = os.path.join(output_dir, env_name, agent_name, run_id)
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -38,12 +39,13 @@ class EpochLogger:
         """Log diagnostics"""
         msg = ""
         for k, v in kwargs.items():
-            if not(k in self.epoch_dict.keys()):
+            if not (k in self.epoch_dict.keys()):
                 self.epoch_dict[k] = []
             self.epoch_dict[k].append(v)
             self.writer.add_scalar(k, v, len(self.epoch_dict[k]))
             msg += f"{k}: {v:<6} | "
-        print(msg)
+        if self.verbose:
+            print(msg)
 
     def dump(self):
         """

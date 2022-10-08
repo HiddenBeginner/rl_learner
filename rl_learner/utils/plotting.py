@@ -9,7 +9,7 @@ import seaborn as sns
 
 def get_datasets(logdir):
     """
-    Recursively look through logdir for output files produced by EpochLogger.
+    Recursively look through logdir for output files produced by EpochLogger. 
 
     Assumes that any file "progress.txt" is a valid hit.
 
@@ -20,20 +20,21 @@ def get_datasets(logdir):
     for root, _, files in os.walk(logdir):
         if 'progress.txt' in files:
             exp_dir, run_id = os.path.split(root)
-            _, exp_name = os.path.split(exp_dir)
+            exp_dir, agent_name = os.path.split(exp_dir)
+            _, env_name = os.path.split(exp_dir)
             exp_data = pd.read_table(os.path.join(root, 'progress.txt'))
 
             # Add columns indicating experiments
-            exp_data.insert(len(exp_data.columns), 'Exp', exp_name)
+            exp_data.insert(len(exp_data.columns), 'Env', env_name)
+            exp_data.insert(len(exp_data.columns), 'Agent', agent_name)
             exp_data.insert(len(exp_data.columns), 'ID', run_id)
-            exp_data.insert(len(exp_data.columns), 'Exp-ID', exp_name + '-' + run_id)
 
             datasets.append(exp_data)
 
     return datasets
 
 
-def plot_data(data, target="AverageEpRet", smooth=1, hue='Exp', **kwargs):
+def plot_data(data, target="AvgEpRet", smooth=1, hue='Agent', **kwargs):
     if smooth > 1:
         y = np.ones(smooth)
         for datum in data:
@@ -45,12 +46,12 @@ def plot_data(data, target="AverageEpRet", smooth=1, hue='Exp', **kwargs):
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
 
-    # Plotting
+    # Plotting    
     sns.set(style='darkgrid', font_scale=1.5)
-    sns.lineplot(data=data, x='Epoch', y=target, hue=hue, **kwargs)
+    sns.lineplot(data=data, x='Steps', y=target, hue=hue, **kwargs)
     plt.legend(loc='best').set_draggable(True)
 
-    xscale = np.max(np.asarray(data['Epoch'])) > 5e3
+    xscale = np.max(np.asarray(data['Steps'])) > 5e3
     if xscale:
         plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 1))
     plt.tight_layout(pad=0.5)
@@ -60,7 +61,8 @@ def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--logdir', type=str)
     parser.add_argument('--savedir', type=str, default=None)
-    parser.add_argument('--y', type=str, default='AverageEpRet')
+    parser.add_argument('--x', type=str, default='Steps')
+    parser.add_argument('--y', type=str, default='AvgEpRet')
     parser.add_argument('--smooth', type=int, default=1)
     parser.add_argument('--fig_width', type=float, default=8)
     parser.add_argument('--fig_height', type=float, default=5)
