@@ -100,7 +100,7 @@ class BaselineREINFORCE(REINFORCE):
         else:
             mu, std = self.policy(s)
             m = Normal(mu, std)
-            z = torch.atanh(torch.clamp(a, -1.0 + 1e-7, 1.0 + 1e-7))
+            z = torch.atanh(torch.clamp(a, -1.0 + 1e-7, 1.0 - 1e-7))
             log_probs = m.log_prob(z)
 
         v = self.value(s)

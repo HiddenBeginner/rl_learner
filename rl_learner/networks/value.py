@@ -17,6 +17,7 @@ class MLPStateValue(nn.Module):
         return x
 
     def forward(self, x):
+        x = self._format(x)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
 

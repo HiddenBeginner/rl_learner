@@ -17,9 +17,10 @@ class Logger:
         """
         Args:
             output_dir (string): The directory where results are stored
-            env_name (string): The name of an environment. 
+            env_name (string): The name of an environment.
             agent_name (string): The name of an agent. The name of an agent is recommended.
             run_id (string): The name of an experiment. If ``None``, defaults to a random number.
+            verbose (bool): If True, print data when logging data, Default: True.
         """
         # Set the directory
         output_dir = output_dir or './results'

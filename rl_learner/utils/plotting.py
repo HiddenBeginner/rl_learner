@@ -9,7 +9,7 @@ import seaborn as sns
 
 def get_datasets(logdir):
     """
-    Recursively look through logdir for output files produced by EpochLogger. 
+    Recursively look through logdir for output files produced by EpochLogger.
 
     Assumes that any file "progress.txt" is a valid hit.
 
@@ -46,7 +46,7 @@ def plot_data(data, target="AvgEpRet", smooth=1, hue='Agent', **kwargs):
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
 
-    # Plotting    
+    # Plotting
     sns.set(style='darkgrid', font_scale=1.5)
     sns.lineplot(data=data, x='Steps', y=target, hue=hue, **kwargs)
     plt.legend(loc='best').set_draggable(True)
