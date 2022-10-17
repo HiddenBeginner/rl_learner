@@ -16,8 +16,10 @@ class ActorCritic:
     ):
         self.action_type = action_type
         self.gamma = gamma
-        self.policy = policy
-        self.value = value
+
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.policy = policy.to(self.device)
+        self.value = value.to(self.device)
         self.policy_optimizer = torch.optim.Adam(self.policy.parameters(), policy_lr)
         self.value_optimizer = torch.optim.Adam(self.value.parameters(), value_lr)
         self.buffer = []
@@ -25,6 +27,8 @@ class ActorCritic:
     @torch.no_grad()
     def act(self, s, training=True):
         self.policy.train(training)
+
+        s = torch.as_tensor(s).float().to(self.device)
         if self.action_type == 'discrete':
             probs = self.policy(s)
             a = torch.multinomial(probs, 1) if training else torch.argmax(probs, dim=-1, keepdim=True)
@@ -40,7 +44,7 @@ class ActorCritic:
         self.policy.train()
         self.value.train()
         s, a, r, s_prime, done = map(lambda x: np.stack(x), zip(*self.buffer))
-        s, a, r, s_prime, done = map(lambda x: torch.as_tensor(x).float(), [s, a, r, s_prime, done])
+        s, a, r, s_prime, done = map(lambda x: torch.as_tensor(x).float().to(self.device), [s, a, r, s_prime, done])
         r = r.unsqueeze(1)
         done = done.unsqueeze(1)
 
@@ -70,6 +74,6 @@ class ActorCritic:
     def process(self, transition):
         self.buffer.append(transition)
 
-        if transition.done:
+        if transition[-1]:
             self.learn()
             self.buffer = []

@@ -6,7 +6,8 @@ from torch.distributions import Normal
 
 class REINFORCE:
     def __init__(self, policy, action_type='discrete', lr=0.001, gamma=0.99):
-        self.policy = policy
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.policy = policy.to(self.device)
         self.action_type = action_type
         self.gamma = gamma
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr)
@@ -15,6 +16,8 @@ class REINFORCE:
     @torch.no_grad()
     def act(self, s, training=True):
         self.policy.train(training)
+
+        s = torch.as_tensor(s).float().to(self.device)
         if self.action_type == 'discrete':
             probs = self.policy(s)
             a = torch.multinomial(probs, 1) if training else torch.argmax(probs, dim=-1, keepdim=True)
@@ -34,7 +37,7 @@ class REINFORCE:
         for t in reversed(range(len(r) - 1)):
             ret[t] += self.gamma * ret[t + 1]
 
-        s, a, ret = map(lambda x: torch.as_tensor(x).float(), [s, a, ret])
+        s, a, ret = map(lambda x: torch.as_tensor(x).float().to(self.device), [s, a, ret])
         ret = ret.unsqueeze(1)
 
         if self.action_type == 'discrete':
@@ -58,7 +61,7 @@ class REINFORCE:
         self.buffer.append(transition)
 
         # Process for each episode
-        if transition.done:
+        if transition[-1]:
             self.learn()
             self.buffer = []
 
@@ -73,8 +76,9 @@ class BaselineREINFORCE(REINFORCE):
         value_lr=0.001,
         gamma=0.99,
     ):
-        self.policy = policy
-        self.value = value
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.policy = policy.to(self.device)
+        self.value = value.to(self.device)
         self.action_type = action_type
         self.gamma = gamma
         self.policy_optimizer = torch.optim.Adam(self.policy.parameters(), policy_lr)
@@ -90,7 +94,7 @@ class BaselineREINFORCE(REINFORCE):
         for t in reversed(range(len(ret) - 1)):
             ret[t] += self.gamma * ret[t + 1]
 
-        s, a, ret = map(lambda x: torch.as_tensor(x).float(), [s, a, ret])
+        s, a, ret = map(lambda x: torch.as_tensor(x).float().to(self.device), [s, a, ret])
         ret = ret.unsqueeze(1)
 
         if self.action_type == 'discrete':
